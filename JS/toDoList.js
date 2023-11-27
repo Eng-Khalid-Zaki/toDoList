@@ -1,36 +1,112 @@
-let task = document.querySelector(".task");
-let add = document.querySelector(".add");
-let tasksList = document.querySelector(".tasks-list");
+let input = document.querySelector(".input");
+let submit = document.querySelector(".add");
+let tasksDiv = document.querySelector(".tasks");
+
+// Empty Array To Store The Tasks
 let arrayOfTasks = [];
-add.onclick = function () {
-  if (task.value !== "") {
-    addTaskToArray(task.value);
-    task.value = "";
-    addTaskToThePage(arrayOfTasks);
+
+// Check if Theres Tasks In Local Storage
+if (localStorage.getItem("tasks")) {
+  arrayOfTasks = JSON.parse(localStorage.getItem("tasks"));
+}
+
+// Trigger Get Data From Local Storage Function
+getDataFromLocalStorage();
+
+// Add Task
+submit.onclick = function () {
+  if (input.value !== "") {
+    addTaskToArray(input.value); // Add Task To Array Of Tasks
+    input.value = ""; // Empty Input Field
   }
 };
-function addTaskToArray(task) {
-  const taskInfo = {
+
+// Click On Task Element
+tasksDiv.addEventListener("click", (e) => {
+  // Delete Button
+  if (e.target.classList.contains("del")) {
+    // Remove Task From Local Storage
+    deleteTaskWith(e.target.parentElement.getAttribute("data-id"));
+    // Remove Element From Page
+    e.target.parentElement.remove();
+  }
+  // Task Element
+  if (e.target.classList.contains("task")) {
+    // Toggle Completed For The Task
+    toggleStatusTaskWith(e.target.getAttribute("data-id"));
+    // Toggle Done Class
+    e.target.classList.toggle("done");
+  }
+});
+
+function addTaskToArray(taskText) {
+  // Task Data
+  const task = {
     id: Date.now(),
-    title: task,
+    title: taskText,
     completed: false,
   };
-  arrayOfTasks.push(taskInfo);
+  // Push Task To Array Of Tasks
+  arrayOfTasks.push(task);
+  // Add Tasks To Page
+  addElementsToPageFrom(arrayOfTasks);
+  // Add Tasks To Local Storage
+  addDataToLocalStorageFrom(arrayOfTasks);
 }
-function addTaskToThePage(arrayOfTasks) {
-  tasksList.innerHTML = "";
-  arrayOfTasks.forEach((element) => {
-    let taskHolder = document.createElement("div");
-    taskHolder.classList.add("holder");
-    let taskDiv = document.createElement("div");
-    taskDiv.innerText = element.title;
-    taskDiv.setAttribute("data-id", element.id);
-    taskDiv.classList.add("task-in-list");
-    let deleteButton = document.createElement("button");
-    deleteButton.innerHTML = "delete";
-    console.log(taskDiv);
-    taskHolder.appendChild(taskDiv);
-    taskHolder.appendChild(deleteButton);
-    tasksList.appendChild(taskHolder);
+
+function addElementsToPageFrom(arrayOfTasks) {
+  // Empty Tasks Div
+  tasksDiv.innerHTML = "";
+  // Looping On Array Of Tasks
+  arrayOfTasks.forEach((task) => {
+    // Create Main Div
+    let div = document.createElement("div");
+    div.className = "task";
+    // Check If Task is Done
+    if (task.completed) {
+      div.className = "task done";
+    }
+    div.setAttribute("data-id", task.id);
+    div.appendChild(document.createTextNode(task.title));
+    // Create Delete Button
+    let span = document.createElement("span");
+    span.className = "del";
+    span.appendChild(document.createTextNode("Delete"));
+    // Append Button To Main Div
+    div.appendChild(span);
+    // Add Task Div To Tasks Container
+    tasksDiv.appendChild(div);
   });
+}
+
+function addDataToLocalStorageFrom(arrayOfTasks) {
+  window.localStorage.setItem("tasks", JSON.stringify(arrayOfTasks));
+}
+
+function getDataFromLocalStorage() {
+  let data = window.localStorage.getItem("tasks");
+  if (data) {
+    let tasks = JSON.parse(data);
+    addElementsToPageFrom(tasks);
+  }
+}
+
+function deleteTaskWith(taskId) {
+  // For Explain Only
+  // for (let i = 0; i < arrayOfTasks.length; i++) {
+  //   console.log(`${arrayOfTasks[i].id} === ${taskId}`);
+  // }
+  arrayOfTasks = arrayOfTasks.filter((task) => task.id != taskId);
+  addDataToLocalStorageFrom(arrayOfTasks);
+}
+
+function toggleStatusTaskWith(taskId) {
+  for (let i = 0; i < arrayOfTasks.length; i++) {
+    if (arrayOfTasks[i].id == taskId) {
+      arrayOfTasks[i].completed == false
+        ? (arrayOfTasks[i].completed = true)
+        : (arrayOfTasks[i].completed = false);
+    }
+  }
+  addDataToLocalStorageFrom(arrayOfTasks);
 }
